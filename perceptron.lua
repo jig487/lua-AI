@@ -44,7 +44,7 @@ local activationFunction = sigmoid
 --calculate cost of actual results from expected results (result - expected)^2
 local function getResultDelta(results,expected)
     if #results ~= #expected then
-        error("Error: Length of expected results does not match length or actual results.\nLength of expected: "..#expected.."\nLength of actual: "..#results)
+        error("Error: Length of expected results does not match length or actual results.\nLength of expected: "..#expected.."\n"..textutils.serialise(expected).."\nLength of actual: "..#results.."\n"..textutils.serialise(results))
     end
     local delta = 0
     for i = 1, #results do
@@ -102,8 +102,9 @@ end
 local function trainNet(iterations,threshhold,inputs,expected,net,weightStep,biasStep)
     local prevNet = net
     local prevResults = iterateNet( inputs,prevNet )
-    local prevDelta = getResultDelta( prevResults, inputs )
+    local prevDelta = getResultDelta( prevResults, expected )
     local iterCount = 0
+
     for i = 1, iterations do
 
         if prevDelta*1000 < threshhold*1000 then
@@ -138,9 +139,9 @@ end
 
 --arbitrary input table
 local inputs = { 1,1 }
-local expected = { 0,1,0,0 }
+local expected = { 0,1,1,1 }
 local net = makeNeuralNet(2,4)
-local results,delta,newNet,iterCount,isThreshhold = trainNet(2000,0.001,inputs,expected,net,0.25,0.25)
+local results,delta,newNet,iterCount,isThreshhold = trainNet(2000,0.0001,inputs,expected,net,0.25,0.25)
 
 if isThreshhold then
     isThreshhold = "true"

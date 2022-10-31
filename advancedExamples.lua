@@ -1,4 +1,6 @@
 --Example 1
+--IMPORTANT NOTE!!!!!
+--This works only if you would copy/paste the following at the bottom of the main `perceptron.lua` file. This code will not work by itself!
 local inputs = {
     { 1,1 }, 
     { 1,0 },

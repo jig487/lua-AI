@@ -1,4 +1,4 @@
---returns a 2d table of weights and biases
+--returns a 2d table of random (from -0.5 to 0.5) weights and biases
 local function makeLayer(size)
     local layer = {}
     for i = 1, size do
@@ -44,7 +44,7 @@ local activationFunction = sigmoid
 --calculate cost of actual results from expected results (result - expected)^2
 local function getResultDelta(results,expected)
     if #results ~= #expected then
-        error("Error: Length of expected results does not match length or actual results.\nLength of expected: "..#expected.."\n"..textutils.serialise(expected).."\nLength of actual: "..#results.."\n"..textutils.serialise(results))
+        error("Error: Length of expected results does not match length or actual results.\nLength of 'expected': "..#expected.."\nLength of 'results': "..#results)
     end
     local delta = 0
     for i = 1, #results do
@@ -137,36 +137,15 @@ local function trainNet(iterations,threshhold,inputs,expected,net,weightStep,bia
     return prevResults,prevDelta,prevNet,iterCount,false
 end
 
---arbitrary input table
-local inputs = { 1,1 }
-local expected = { 0,1,1,1 }
-local net = makeNeuralNet(2,4)
-local results,delta,newNet,iterCount,isThreshhold = trainNet(2000,0.0001,inputs,expected,net,0.25,0.25)
-
-if isThreshhold then
-    isThreshhold = "true"
-else
-    isThreshhold = "false"
-end
-
-local function cprint(c,t)
-    local col = term.getTextColor()
-    term.setTextColor(c)
-    print(t)
-    term.setTextColor(col)
-end
-
-term.clear()
-term.setCursorPos(1,1)
-
-cprint(colors.red,"Finished training!")
-cprint(colors.orange,"Ending Iteration: "..iterCount)
-cprint(colors.yellow,"Ending Delta: "..delta)
-cprint(colors.red,"Ended because threshhold was reached?: ")
-cprint(colors.orange,isThreshhold)
-cprint(colors.red,"Expected Results:")
-print(textutils.serialise(expected))
-cprint(colors.red,"Results: ")
-print(textutils.serialise(results))
-cprint(colors.red,"End net values:")
-print(textutils.serialise(newNet))
+return {
+    makeLayer = makeLayer,
+    makeNeuralNet = makeNeuralNet,
+    sigmoid = sigmoid,
+    heavySide = heavySide,
+    activationFunction = activationFunction,
+    getResultDelta = getResultDelta,
+    netScramble = netScramble,
+    iterateLayer = iterateLayer,
+    iterateNet = iterateNet,
+    trainNet = trainNet
+}

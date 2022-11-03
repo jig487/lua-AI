@@ -97,6 +97,7 @@ end
 --returns the outputs of every node in a given net for inputs
 local function getNetOutputs(inputs,net)
     --run inputs through the whole net
+
     local lastInputs = inputs
 
     for layer = 1, #net do
@@ -123,7 +124,7 @@ end
 local function getAvgNetCost(inputs,expectedOutputs,net)
     local sum = 0
     local outputs = getNetOutputs(inputs,net)
-    for dataPoint = 1, #inputs do
+    for dataPoint = 1, #outputs do
         local error = (outputs[dataPoint] - expectedOutputs[dataPoint])
         sum = sum + (error * error)
     end
@@ -137,7 +138,9 @@ local function applyGradients(learnRate,net)
         for nodeLookAt = 1, #currentNet do
             local currentNode = currentNet[nodeLookAt]
             net[layerLookAt][nodeLookAt].b = currentNode.b - currentNode.costb*learnRate
-            net[layerLookAt][nodeLookAt].w = currentNode.b - currentNode.costw*learnRate
+            for i = 1, #currentNode do
+                net[layerLookAt][nodeLookAt][i].w = currentNode[i].w - currentNode[i].costw*learnRate
+            end
         end
     end
 end

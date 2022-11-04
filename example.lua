@@ -42,5 +42,5 @@ while cost > targetCost do
     sleep()
 end
 print("Finished training!")
-print("Resulting net has an cost of "..cost)
+print("Resulting net has a cost of "..cost)
 lmll.netDebug(omnius)

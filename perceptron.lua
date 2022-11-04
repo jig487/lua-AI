@@ -1,11 +1,30 @@
---returns a table which has 'x' layers of 'y' nodes initialized with random weights and biases between 0 and 1
---x is simply the numbers of layers inputted
---y is the value of the number/s inputted.
---example: makeNet(1,5,8,3) would return a table of 4 layers with the following node counts:
--- layer 1: 1 node
--- layer 2: 5 nodes
--- layer 3: 8 nodes
--- layer 4: 3 nodes
+--Prints out the contents of the given net. 
+--See the comment below makeNet() for an example.
+local function netDebug(net)
+    print("\nPrinting out net...")
+    print("L = layer, N = node\n")
+    local layerSum = #net
+    local nodeSum = 0
+    local connectionSum = 0
+    for layer = 1, #net do
+        print("L"..layer..":")
+        for node = 1, #net[layer] do
+            nodeSum = nodeSum + 1
+            print("    N"..node..", B="..(net[layer][node].b).." : "..#net[layer][node].." connections")
+            for connection = 1, #net[layer][node] do
+                print("            W"..connection..": "..(net[layer][node][connection].w))
+                connectionSum = connectionSum + 1
+            end
+        end
+    end
+    print("\nTotals: "..layerSum.." layers, "..nodeSum.." nodes, "..connectionSum.." connections.")
+    print("Press Enter to continue.")
+    read()
+end
+
+--returns a 3d table of the created net
+--input numbers. Each number creates a new layer with nodes equal to the inputted number
+--each node has connections equal to the previous layers node count (example below)
 local function makeNet(...)
 
     local layers = {...}
@@ -35,47 +54,24 @@ end
 --[[
 Example structure:
 local net = makeNet(2,3,2)
-
 (2,3,2 means 2 inputs, 1 hidden layeer of 3 nodes, and an output layer of 2 nodes)
-net = {
-      (hidden layer 1, 3 nodes, 2 connections each because previous layer has 2 nodes) 
-      (each node has a bias and a bias cost, and each connection inside that node has a weight and a weight cost)
-    {
-          (node 1) 
-        {
-            b,costb,
-              (connection 1) 
-            { w,costw },
-              (connection 2) 
-            {..},
-        },
-          (node 2) 
-        {
-            b,costb,
-            {..},
-            {..},
-        }
-          (node 3) 
-        {
-            b,costb,
-            {..},
-            {..},
-        }
-    },
-      (output layer, 2 nodes, 3 connections each because previous layer has 3 nodes)
-    {
-        {
-            b,costb,
-            {..},
-            {..},
-        },
-        {
-            b,costb,
-            {..},
-            {..},
-        }
-    }
-}
+
+L = layer, N = node
+L1:
+    N1: 2 connections
+        W1: __
+        W2: __
+    N2: 2 connections
+        ...
+    N3: 2 connections
+        ...
+L2:
+    N1: 3 connections
+        ...
+    N2: 3 connections
+        ...
+
+Totals: 2 layers, 5 nodes, 12 connections
 
 ]]
 
@@ -99,7 +95,6 @@ local function getNetOutputs(inputs,net)
     --run inputs through the whole net
 
     local lastInputs = inputs
-
     for layer = 1, #net do
 
         local layerOutput = {}
@@ -108,7 +103,7 @@ local function getNetOutputs(inputs,net)
             local sum = net[layer][node].b
             for connection = 1, #net[layer][node] do
 
-                sum = sum + net[node][connection].w*lastInputs[node]
+                sum = sum + net[layer][node][connection].w*lastInputs[connection]
 
             end
             layerOutput[node] = sigmoidActivation(sum)
@@ -122,24 +117,30 @@ end
 
 --returns the average cost value of a net for a given set of data
 local function getAvgNetCost(inputs,expectedOutputs,net)
-    local sum = 0
-    local outputs = getNetOutputs(inputs,net)
-    for dataPoint = 1, #outputs do
-        local error = (outputs[dataPoint] - expectedOutputs[dataPoint])
-        sum = sum + (error * error)
+    local avgSum = 0
+    for set = 1, #expectedOutputs do
+        local sum = 0
+        local outputs = getNetOutputs(inputs[set],net)
+        for dataPoint = 1, #expectedOutputs[set] do
+            local error = (outputs[dataPoint] - expectedOutputs[set][dataPoint])
+            sum = sum + (error * error)
+        end
+        avgSum = avgSum + (sum/#outputs)
     end
-    return sum / #outputs
+    return avgSum / #expectedOutputs[1]
 end
 
 --Applies cost gradients to net
 local function applyGradients(learnRate,net)
-    for layerLookAt = 1, #net do
-        local currentNet = net[layerLookAt]
-        for nodeLookAt = 1, #currentNet do
-            local currentNode = currentNet[nodeLookAt]
-            net[layerLookAt][nodeLookAt].b = currentNode.b - currentNode.costb*learnRate
-            for i = 1, #currentNode do
-                net[layerLookAt][nodeLookAt][i].w = currentNode[i].w - currentNode[i].costw*learnRate
+    for layer = 1, #net do
+        for node = 1, #net[layer] do
+
+            net[layer][node].b = net[layer][node].b - net[layer][node].costb*learnRate
+
+            for connection = 1, #net[layer][node] do
+
+                net[layer][node][connection].w = net[layer][node][connection].w - net[layer][node][connection].costw*learnRate
+            
             end
         end
     end
@@ -147,10 +148,9 @@ end
 
 --trains the net using backpropagation
 local function trainNet(inputs,expectedOutputs,net,learnRate)
-
+    
     local h = 0.0001
     local originalCost = getAvgNetCost(inputs,expectedOutputs,net)
-
     for layer = 1,  #net do
         for node = 1, #net[layer] do
             for connection = 1, #net[layer][node] do
@@ -168,6 +168,7 @@ local function trainNet(inputs,expectedOutputs,net,learnRate)
             net[layer][node].costb = deltaCost / h
         end
     end
+
     applyGradients(learnRate,net)
 end
 
@@ -175,5 +176,6 @@ return {
     makeNet = makeNet,
     getNetOutputs = getNetOutputs,
     getAvgNetCost = getAvgNetCost,
-    trainNet = trainNet
+    trainNet = trainNet,
+    netDebug = netDebug
 }

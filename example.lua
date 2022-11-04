@@ -1,3 +1,4 @@
+--Example file. Requires main function library to run
 local lmll = require("perceptron")
 
 local omnius = lmll.makeNet(2,5,6,2)

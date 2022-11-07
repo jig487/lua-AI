@@ -59,8 +59,9 @@ local net = makeNet(2,3,2)
 L = layer, N = node
 L1:
     N1: 2 connections
-        W1: __
-        W2: __
+        B: __
+            W1: __
+            W2: __
     N2: 2 connections
         ...
     N3: 2 connections
